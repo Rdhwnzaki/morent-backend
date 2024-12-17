@@ -1,33 +1,42 @@
 const User = require("../../models/User");
 const bcrypt = require("bcrypt");
+const { validateRegisterInput } = require("../../utils/validators");
+const { createError } = require("../../utils/errorHandler");
 
-const registerUser = async (req, res) => {
+const registerUser = async (req, res, next) => {
     try {
-        const { name, username, password } = req.body;
+        const { name, username, email, password } = req.body;
+        const validationError = validateRegisterInput({ name, username, email, password });
 
-        if (!name || !username || !password) {
-            return res.status(400).json({ message: "Name, username, and password are required." });
-        }
-
-        const existingUser = await User.findOne({ username });
+        if (validationError) return res.status(400).json({ message: validationError });
+        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
         if (existingUser) {
-            return res.status(400).json({ message: "Username already exists." });
+            return next(createError(400, "Username or email already exists."));
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const SALT_ROUNDS = 10;
+        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
         const newUser = new User({
             name,
             username,
+            email,
             password: hashedPassword,
         });
 
         await newUser.save();
 
-        res.status(201).json({ message: "User registered successfully.", user: newUser });
+        res.status(201).json({
+            message: "User registered successfully.",
+            data: {
+                id: newUser._id,
+                name: newUser.name,
+                username: newUser.username,
+                email: newUser.email,
+            },
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error" });
+        next(error);
     }
 };
 

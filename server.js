@@ -5,7 +5,7 @@ const authRoutes = require("./routes/auth")
 dotenv.config();
 
 const corsMiddleware = require("./middlewares/corsMiddleware");
-const errorMiddleware = require("./middlewares/errorMiddleware");
+const { errorHandler } = require("./middlewares/errorMiddleware");
 const connectDB = require("./config/db");
 const { PORT } = require("./config/constant");
 
@@ -22,7 +22,7 @@ app.get("/", (req, res) => {
     res.send("Welcome to Morent API");
 });
 
-app.use(errorMiddleware);
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
