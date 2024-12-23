@@ -6,9 +6,15 @@ const { createError } = require("../../utils/errorHandler");
 const registerUser = async (req, res, next) => {
     try {
         const { name, username, email, password } = req.body;
-        const validationError = validateRegisterInput({ name, username, email, password });
+        const validationError = validateRegisterInput({
+            name,
+            username,
+            email,
+            password,
+        });
 
-        if (validationError) return res.status(400).json({ message: validationError });
+        if (validationError)
+            return res.status(400).json({ message: validationError });
         const existingUser = await User.findOne({ $or: [{ username }, { email }] });
         if (existingUser) {
             return next(createError(400, "Username or email already exists."));

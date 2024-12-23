@@ -13,11 +13,14 @@ const loginUser = async (req, res, next) => {
         const { username, password } = req.body;
 
         const validationError = validateLoginInput({ username, password });
-        if (validationError) return res.status(400).json({ message: validationError });
+        if (validationError)
+            return res.status(400).json({ message: validationError });
 
         const attempts = await redis.get(`login_attempts:${username}`);
         if (attempts >= MAX_LOGIN_ATTEMPTS) {
-            return next(createError(429, "Too many failed login attempts. Try again later."));
+            return next(
+                createError(429, "Too many failed login attempts. Try again later.")
+            );
         }
 
         const user = await User.findOne({ username });
